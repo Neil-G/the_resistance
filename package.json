@@ -1,0 +1,25 @@
+{
+  "name": "the_resistance",
+  "version": "1.0.0",
+  "description": "The Resistance Card Game",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Neil-G/the_resistance.git"
+  },
+  "keywords": [
+    "Resistance",
+    "Game",
+    "Card",
+    "Game"
+  ],
+  "author": "neil-g",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Neil-G/the_resistance/issues"
+  },
+  "homepage": "https://github.com/Neil-G/the_resistance#readme"
+}
