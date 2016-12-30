@@ -10,6 +10,8 @@ module.exports.reducer = (state = fromJS(initialState), action) => {
   switch(action.type){
     case 'addPlayerToGame':
       return addPlayerToGame(state, action.player)
+      case 'removePlayerFromGame':
+        return removePlayerFromGame(state, action.playerId)
     default:
       return state
   }
@@ -35,10 +37,15 @@ const initialState = {
 
 // MUTATION FUNCTIONS
 function addPlayerToGame(state, player) {
-  return state.players.push(player)
+  const updatedPlayersList = state.get('players').push(player);
+  return state.setIn(['players'], updatedPlayersList);
 }
 
-
+function removePlayerFromGame(state, playerId) {
+  const playerIndex = state.get('players').findIndex((player) => playerId == player.id);
+  const updatedPlayersList = state.get('players').delete(playerIndex);
+  return state.setIn(['players'], updatedPlayersList);
+}
 
 
 module.exports.addPlayerToGame = addPlayerToGame;
