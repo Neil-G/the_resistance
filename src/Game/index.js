@@ -19,6 +19,8 @@ module.exports.reducer = (state = fromJS(initialState), action) => {
       return setInitialLeader(state);
     case 'selectPlayerForMission':
       return selectPlayerForMission(state, action.playerId);
+    case 'unselectPlayerForMission':
+      return unselectPlayerForMission(state, action.playerId);
     default:
       return state
   }
@@ -65,7 +67,7 @@ function setSpies(state){
     let randomIndex = Math.floor(Math.random() * numberofPlayers)
     if (!spyIndexes.includes(randomIndex)) spyIndexes.push(randomIndex)
   }
-  const updatedSpyIds = spyIndexes.map((index) => state.get('players').toJS()[Number(index)].id)
+  const updatedSpyIds = spyIndexes.map((index) => state.get('players').get(index).id);
   return state.setIn(['spyIds'], List(updatedSpyIds));
 }
 
@@ -73,7 +75,10 @@ function setInitialLeader(state) {
   const numberofPlayers = state.get('players').size;
   if (numberofPlayers < 5) return state
   let randomIndex = Math.floor(Math.random() * numberofPlayers)
-  return state.setIn(['currentMission', 'leaderId'], state.get('players').toJS()[Number(randomIndex)].id)
+  return state.setIn(
+    ['currentMission', 'leaderId'],
+    state.get('players').get(randomIndex).id
+  )
 }
 
 function selectPlayerForMission(state, playerId) {
@@ -82,12 +87,26 @@ function selectPlayerForMission(state, playerId) {
   // mission must not be full
   return state.setIn(
     ['currentMission', 'playerIdsSelectedForMission'],
-    state.get('currentMission').get('playerIdsSelectedForMission').push(playerId)
+    state
+      .get('currentMission')
+      .get('playerIdsSelectedForMission')
+      .push(playerId)
   );
 }
 
-function unselectPlayerForMission(state, id) {
+function unselectPlayerForMission(state, playerId) {
   // removes id from playerIds.SelectedForMission
+  const playerIdIndex = state
+    .get('currentMission')
+    .get('playerIdsSelectedForMission')
+    .indexOf(playerId);
+  return state.setIn(
+    ['currentMission', 'playerIdsSelectedForMission'],
+    state
+    .get('currentMission')
+    .get('playerIdsSelectedForMission')
+    .delete(playerIdIndex)
+  )
 }
 
 function voteOnMissionAcceptance(state, playerId, vote) {
