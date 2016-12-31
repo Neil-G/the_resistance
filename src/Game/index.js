@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 const immutable = require('immutable');
 const fromJS = immutable.fromJS;
@@ -11,18 +11,33 @@ module.exports.reducer = (state = fromJS(initialState), action) => {
   switch(action.type){
     case 'addPlayerToGame':
       return addPlayerToGame(state, action.player);
+
     case 'removePlayerFromGame':
       return removePlayerFromGame(state, action.playerId);
+
     case 'setSpies':
       return setSpies(state);
+
     case 'setInitialLeader':
       return setInitialLeader(state);
+
     case 'selectPlayerForMission':
       return selectPlayerForMission(state, action.playerId);
+
     case 'unselectPlayerForMission':
       return unselectPlayerForMission(state, action.playerId);
+
+    case 'voteOnMissionAcceptance':
+      return voteOnMissionAcceptance(state, action.playerId, action.vote);
+
+    case 'removeAcceptanceVote':
+        return removeAcceptanceVote(state, action.playerId);
+
+    case 'countMissionVotes':
+        return countMissionVotes(state);
+
     default:
-      return state
+      return state;
   }
 }
 
@@ -47,38 +62,59 @@ const initialState = {
 // MUTATION FUNCTIONS
 function addPlayerToGame(state, player) {
   if (state.get('players').size > 9) return state
-  const updatedPlayersList = state.get('players').push(player);
-  return state.setIn(['players'], updatedPlayersList);
+  return state.set(
+    'players',
+    state
+      .get('players')
+      .push(player)
+  );
 }
 
 function removePlayerFromGame(state, playerId) {
   if (state.get('players').size == 0) return state
-  const playerIndex = state.get('players').findIndex((player) => playerId == player.id);
-  const updatedPlayersList = state.get('players').delete(playerIndex);
-  return state.setIn(['players'], updatedPlayersList);
+  const playerIndex = state
+    .get('players')
+    .findIndex((player) => playerId == player.id);
+  return state.set(
+    'players',
+    state
+      .get('players')
+      .delete(playerIndex)
+  );
 }
 
-function setSpies(state){
+function setSpies(state) {
   const numberofPlayers = state.get('players').size;
   if (numberofPlayers < 5) return state
-  const numberOfSpies = Math.ceil( numberofPlayers / 3);
+  const numberOfSpies = Math.ceil( numberofPlayers / 3 );
   let spyIndexes = [];
   while (spyIndexes.length < numberOfSpies){
-    let randomIndex = Math.floor(Math.random() * numberofPlayers)
+    let randomIndex = Math.floor(Math.random() * numberofPlayers);
     if (!spyIndexes.includes(randomIndex)) spyIndexes.push(randomIndex)
   }
-  const updatedSpyIds = spyIndexes.map((index) => state.get('players').get(index).id);
-  return state.setIn(['spyIds'], List(updatedSpyIds));
+  const updatedSpyIds = spyIndexes
+    .map( (index) => state
+      .get('players')
+      .get(index)
+      .id
+    );
+  return state.set(
+    'spyIds',
+    List(updatedSpyIds)
+  );
 }
 
 function setInitialLeader(state) {
   const numberofPlayers = state.get('players').size;
   if (numberofPlayers < 5) return state
-  let randomIndex = Math.floor(Math.random() * numberofPlayers)
+  let randomIndex = Math.floor(Math.random() * numberofPlayers);
   return state.setIn(
     ['currentMission', 'leaderId'],
-    state.get('players').get(randomIndex).id
-  )
+    state
+      .get('players')
+      .get(randomIndex)
+      .id
+  );
 }
 
 function selectPlayerForMission(state, playerId) {
@@ -88,8 +124,7 @@ function selectPlayerForMission(state, playerId) {
   return state.setIn(
     ['currentMission', 'playerIdsSelectedForMission'],
     state
-      .get('currentMission')
-      .get('playerIdsSelectedForMission')
+      .getIn(['currentMission', 'playerIdsSelectedForMission'])
       .push(playerId)
   );
 }
@@ -97,34 +132,47 @@ function selectPlayerForMission(state, playerId) {
 function unselectPlayerForMission(state, playerId) {
   // removes id from playerIds.SelectedForMission
   const playerIdIndex = state
-    .get('currentMission')
-    .get('playerIdsSelectedForMission')
+    .getIn(['currentMission', 'playerIdsSelectedForMission'])
     .indexOf(playerId);
   return state.setIn(
     ['currentMission', 'playerIdsSelectedForMission'],
     state
-    .get('currentMission')
-    .get('playerIdsSelectedForMission')
-    .delete(playerIdIndex)
-  )
+      .getIn(['currentMission', 'playerIdsSelectedForMission'])
+      .delete(playerIdIndex)
+  );
 }
 
 function voteOnMissionAcceptance(state, playerId, vote) {
   // adds entry to acceptanceVotes object
+  return state.setIn(
+    ['currentMission', 'acceptanceVotes', playerId],
+    vote
+  );
 }
 
 function removeAcceptanceVote(state, playerId) {
-  // set the key with playerId to undefined in acceptanceVotes object
+  return state.deleteIn(['currentMission', 'acceptanceVotes', playerId]);
 }
 
-function acceptMissionVoting(state) {
+function countMissionVotes(state) {
   // determine if mission is accepted or not
-  // add to failed missions
+  // if more accept votes, proceed to mission
+  // else add to failed proposals
+  let acceptCount = 0;
+  state
+    .getIn(['currentMission', 'acceptanceVotes'])
+    .forEach((vote) => vote ? acceptCount++ : acceptCount-- );
+  if (acceptCount > 0) {
+
+  } else {
+
+  }
+  return state;
 }
 
 function changeLeader(state) {
-  // determine if mission is ccepted or not
-  //
+  // change leader id to next on list, or first if leader is current last on list
+
 }
 
 function castMissionVote(state, vote) {
@@ -136,13 +184,15 @@ function endMission(state) {
 }
 
 function calculateMissionSize(numberOfPlayers, missionNumber) {
-  if (NumberOfPlayers == 5) {
-    return [2, 3, 2, 3, 3][ missionNumber - 1 ]
-  } else if (NumberOfPlayers == 6) {
-    return [2, 3, 4, 3, 4][ missionNumber - 1 ]
-  } else if (NumberOfPlayers == 7) {
-    return [2, 3, 3, 4, 4][ missionNumber - 1 ]
-  } else if ((NumberOfPlayers > 7) && (NumberOfPlayers < 11)) {
-    return [3, 4, 4, 5, 5][ missionNumber - 1 ]
+  if (numberOfPlayers == 5) {
+    return [2, 3, 2, 3, 3][ missionNumber - 1 ];
+  } else if (numberOfPlayers == 6) {
+    return [2, 3, 4, 3, 4][ missionNumber - 1 ];
+  } else if (numberOfPlayers == 7) {
+    return [2, 3, 3, 4, 4][ missionNumber - 1 ];
+  } else if ((numberOfPlayers > 7) && (numberOfPlayers < 11)) {
+    return [3, 4, 4, 5, 5][ missionNumber - 1 ];
   }
 }
+
+module.exports.calculateMissionSize = calculateMissionSize;
